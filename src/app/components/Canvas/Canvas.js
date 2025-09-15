@@ -123,22 +123,23 @@ export default function Canvas() {
   );
 
   const onNodeClick = useCallback(
-    (event, node) => {
-      event.stopPropagation();
-      setSelectedNode(node);
+      (event, node) => {
+        event.stopPropagation();
+        setSelectedNode(node);
 
-      const entityKey = node.type.charAt(0).toUpperCase() + node.type.slice(1);
-      const propsDef = entities[entityKey]?.properties || [];
+        const entityKey = node.type.charAt(0).toUpperCase() + node.type.slice(1);
+        const propsDef = entities[entityKey]?.properties || [];
 
-      const initValues = {};
-      propsDef.forEach(({ name }) => {
-        initValues[name] = node.data[name] || "";
-      });
+        // Use the node's current data for form values, so edits persist
+        const initValues = {};
+        propsDef.forEach(({ name }) => {
+          initValues[name] = node.data[name] !== undefined ? node.data[name] : "";
+        });
 
-      setFormValues(initValues);
-    },
-    []
-  );
+        setFormValues(initValues);
+      },
+      []
+    );
 
   const onDrop = useCallback(
     (event) => {
