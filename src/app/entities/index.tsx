@@ -58,4 +58,22 @@ export const entities = {
       {name:"processingTime", label:"Processing Time", type:"number"}
     ],
   },
+  Router: {
+    type: "router",
+    label: "Router",
+    color: "#fb8500",
+    properties: [
+      { 
+        name: "routingStrategy", 
+        label: "Routing Strategy", 
+        type: "dropdown",
+        options: [
+          { value: "round-robin", label: "Round Robin" },
+          { value: "random", label: "Random" },
+          { value: "fifo", label: "FIFO" },
+          { value: "priority", label: "Priority Based" }
+        ]
+      }
+    ],
+  },
 };

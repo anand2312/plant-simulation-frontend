@@ -1,4 +1,4 @@
-  /**
+/**
    * Canvas.js
    *
    * This component provides a drag-and-drop canvas for simulating plant entities using React Flow.
@@ -17,7 +17,7 @@
    */
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState,useEffect } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -86,7 +86,9 @@ const nodeTypes = {
   station: (props) => <CustomNode {...props} />,
   conveyor: (props) => <CustomNode {...props} />,
   drain: (props) => <CustomNode {...props} />,
+  router: (props) => <CustomNode {...props} />,
 };
+
 /**
 * Main Canvas component for the plant simulation frontend.
 * Provides the React Flow canvas and manages node/edge state.
@@ -99,12 +101,40 @@ export default function Canvas() {
   const [edges, setEdges] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [formValues, setFormValues] = useState({});
-
+  const printValidEdges = () => {
+    // Get all node IDs for quick lookup
+    const nodeIds = nodes.map(node => node.id);
+    
+    // Filter edges where both source and target exist in nodes
+    const validEdges = edges.filter(edge => 
+      nodeIds.includes(edge.source) && nodeIds.includes(edge.target)
+    );
+    
+    console.log("Valid Edges:", validEdges);
+  };
+  const logEdges = () => {
+    console.log("Current Edges:", edges);
+  };
+  
+  // Example usage: You can call this function from a button or any other event
+  useEffect(() => {
+    // Example: Log edges whenever they change
+    console.log("Edges updated:", edges);
+  }, [edges]);
   const onConnect = useCallback(
     (params) => setEdges((eds) => addEdge(params, eds)),
     []
   );
-
+  const logNodes = () => {
+    console.log("Current Nodes:", nodes);
+  };
+  
+  // Example usage: You can call this function from a button or any other event
+  useEffect(() => {
+    // Example: Log nodes whenever they change
+    console.log("Nodes updated:", nodes);
+  }, [nodes]);
+  
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     
@@ -148,7 +178,9 @@ export default function Canvas() {
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const type = event.dataTransfer.getData("application/reactflow");
       if (!type || !entities[type]) return;
-
+      if (type === "router") {
+        newNode.data.routingStrategy = "round-robin"; // Default value
+      }
       const position = {
         x: event.clientX - reactFlowBounds.left,
         y: event.clientY - reactFlowBounds.top,
@@ -171,6 +203,7 @@ export default function Canvas() {
           ),
           onDelete: () =>
             setNodes((nds) => nds.filter((node) => node.id !== id)),
+            
         },
       };
 
@@ -221,6 +254,28 @@ export default function Canvas() {
       onDrop={onDrop}
       onDragOver={onDragOver}
     >
+      <div>
+    {/* Other JSX */}
+    <button onClick={logEdges}>Log Edges</button>
+    {/* React Flow Canvas */}
+  </div>
+  <div style={{ position: "absolute", top: 10, right: 10, zIndex: 10 }}>
+          <button 
+            onClick={printValidEdges}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#219ebc",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontWeight: "bold"
+            }}
+          >
+            Check Valid Edges
+          </button>
+        </div>
+  <button onClick={logNodes}>Log Nodes</button>
       <ReactFlowProvider>
         <ReactFlow
           nodes={nodes}
