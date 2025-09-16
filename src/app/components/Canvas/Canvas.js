@@ -106,7 +106,7 @@ export default function Canvas() {
 
   // Export current flow as JSON in { components: [...] } format
   const exportJson = () => {
-    // For each node, add outgoingNodes: array of target node ids for which this node is the source
+    // For each node, add outputs: array of target node ids for which this node is the source
     const components = [
       ...nodes.map(node => {
         const outgoing = edges
@@ -116,7 +116,7 @@ export default function Canvas() {
           ...node,
           data: {
             ...node.data,
-            outgoingNodes: outgoing,
+            outputs: outgoing,
           },
           type: node.type,
         };
