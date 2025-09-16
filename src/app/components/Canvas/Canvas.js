@@ -101,6 +101,54 @@ export default function Canvas() {
   const [edges, setEdges] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [formValues, setFormValues] = useState({});
+  // --- Import/Export JSON ---
+  const importInputRef = useRef(null);
+
+  // Export current flow as JSON in { components: [...] } format
+  const exportJson = () => {
+    // For each node, add outgoingNodes: array of target node ids for which this node is the source
+    const components = [
+      ...nodes.map(node => {
+        const outgoing = edges
+          .filter(edge => edge.source === node.id)
+          .map(edge => edge.target);
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            outgoingNodes: outgoing,
+          },
+          type: node.type,
+        };
+      }),
+      ...edges.map(edge => ({ type: 'edge', ...edge })),
+    ];
+    const flow = { components };
+    console.log(JSON.stringify(flow, null, 2));
+    alert("Flow JSON has been logged to the console.");
+  };
+
+  // Import flow from JSON file
+  const importJson = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target.result);
+        if (json.nodes && json.edges) {
+          setNodes(json.nodes);
+          setEdges(json.edges);
+        } else {
+          alert("Invalid JSON: Must contain 'nodes' and 'edges'.");
+        }
+      } catch (err) {
+        alert("Failed to parse JSON file.");
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+  };
   const printValidEdges = () => {
     // Get all node IDs for quick lookup
     const nodeIds = nodes.map(node => node.id);
@@ -156,7 +204,11 @@ export default function Canvas() {
       (event, node) => {
         event.stopPropagation();
         setSelectedNode(node);
-
+        if (!node.type) {
+          alert("Node type is missing. Please check your imported JSON.");
+          setFormValues({});
+          return;
+        }
         const entityKey = node.type.charAt(0).toUpperCase() + node.type.slice(1);
         const propsDef = entities[entityKey]?.properties || [];
 
@@ -254,17 +306,36 @@ export default function Canvas() {
       onDrop={onDrop}
       onDragOver={onDragOver}
     >
-      <div>
-    {/* Other JSX */}
-    <button onClick={logEdges}>Log Edges</button>
-    {/* React Flow Canvas */}
-  </div>
-  <div style={{ position: "absolute", top: 10, right: 10, zIndex: 10 }}>
-          <button 
-            onClick={printValidEdges}
+      {/* Check Valid Edges and Import/Export Buttons (aligned top-right) */}
+      <div style={{ position: "absolute", top: 10, right: 10, zIndex: 20, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+        <button 
+          onClick={printValidEdges}
+          style={{
+            padding: "8px 16px",
+            backgroundColor: "#219ebc",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            marginBottom: 4
+          }}
+        >
+          Check Valid Edges
+        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            type="file"
+            accept="application/json"
+            ref={importInputRef}
+            onChange={importJson}
+            style={{ display: "none" }}
+          />
+          <button
+            onClick={() => importInputRef.current && importInputRef.current.click()}
             style={{
               padding: "8px 16px",
-              backgroundColor: "#219ebc",
+              backgroundColor: "#10b981",
               color: "white",
               border: "none",
               borderRadius: "4px",
@@ -272,10 +343,25 @@ export default function Canvas() {
               fontWeight: "bold"
             }}
           >
-            Check Valid Edges
+            Import JSON
+          </button>
+          <button
+            onClick={exportJson}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#6366f1",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontWeight: "bold"
+            }}
+          >
+            Export JSON
           </button>
         </div>
-  <button onClick={logNodes}>Log Nodes</button>
+      </div>
+      <button onClick={logNodes}>Log Nodes</button>
       <ReactFlowProvider>
         <ReactFlow
           nodes={nodes}
