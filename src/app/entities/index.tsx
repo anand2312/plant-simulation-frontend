@@ -20,12 +20,12 @@ export const entities = {
     label: "Source",
     color: "#8ecae6",
     properties: [
-      { name: "processingTime", label: "Processing Time", type: "text" },
-      { name: "capacity", label: "Capacity", type: "number" },
+      
+      { name: "limit", label: "Limit", type: "number" },
       {name:"interval", label:"Interval", type:"number"},
       {name:"startTime", label:"Start Time", type:"number"},
       {name:"endTime", label:"End Time", type:"number"},
-      {name:"startimmediately", label:"Start Immediately", type:"checkbox"},
+      {name:"strategy", label:"Strategy", type:"string"},
     ],
   },
   Station: {
@@ -33,21 +33,21 @@ export const entities = {
     label: "Station",
     color: "#219ebc",
     properties: [
-      { name: "processingTime", label: "Processing Time", type: "text" },
+      { name: "processingTime", label: "Processing Time", type: "number" },
       { name: "capacity", label: "Capacity", type: "number" },
-      
+      {name:"strategy", label:"Strategy", type:"string"},
     ],
   },
   Conveyor: {
     type: "conveyor",
     label: "Conveyor",
     color: "#ffb703",
+    
     properties: [
       { name: "speed", label: "Speed", type: "number" },
       { name: "length", label: "Length", type: "number" },
       { name: "capacity", label: "Capacity", type: "number" },
-      {name:"direction", label:"Direction", type:"text"},
-      {name:"time", label:"Time", type:"number"},
+      {name:"strategy", label:"Strategy", type:"string"},
     ],
   },
   Drain: {

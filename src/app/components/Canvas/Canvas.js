@@ -105,7 +105,7 @@ export default function Canvas() {
   const importInputRef = useRef(null);
 
   // Export current flow as JSON in { components: [...] } format
-  const exportJson = () => {
+  const exportJson =async () => {
     // For each node, add outputs: array of target node ids for which this node is the source
     const components = [
       ...nodes.map(node => {
@@ -124,6 +124,33 @@ export default function Canvas() {
       ...edges.map(edge => ({ type: 'edge', ...edge })),
     ];
     const flow = { components };
+    try {
+      // Send the flow data to the FastAPI endpoint
+      const response = await fetch('http://127.0.0.1:8000/submit-flow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(flow),
+        
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      else{
+        console.log("SUCCESS")
+      }
+      const data = await response.json();
+      console.log('Server response:', data);
+      alert('Flow successfully sent to the server!');
+      
+      // Optional: Still log the flow to console for debugging
+      console.log('Flow JSON:', JSON.stringify(flow, null, 2));
+    } catch (error) {
+      console.error('Error sending flow to server:', error);
+      alert(`Failed to send flow to server: ${error.message}`);
+    }
     console.log(JSON.stringify(flow, null, 2));
     alert("Flow JSON has been logged to the console.");
   };
@@ -308,7 +335,7 @@ export default function Canvas() {
     >
       {/* Check Valid Edges and Import/Export Buttons (aligned top-right) */}
       <div style={{ position: "absolute", top: 10, right: 10, zIndex: 20, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-        <button 
+        {/* <button 
           onClick={printValidEdges}
           style={{
             padding: "8px 16px",
@@ -322,7 +349,7 @@ export default function Canvas() {
           }}
         >
           Check Valid Edges
-        </button>
+        </button> */}
         <div style={{ display: "flex", gap: 8 }}>
           <input
             type="file"
@@ -343,7 +370,7 @@ export default function Canvas() {
               fontWeight: "bold"
             }}
           >
-            Import JSON
+            Import Layout
           </button>
           <button
             onClick={exportJson}
@@ -357,11 +384,11 @@ export default function Canvas() {
               fontWeight: "bold"
             }}
           >
-            Export JSON
+            Export Layout
           </button>
         </div>
       </div>
-      <button onClick={logNodes}>Log Nodes</button>
+      {/* <button onClick={logNodes}>Log Nodes</button> */}
       <ReactFlowProvider>
         <ReactFlow
           nodes={nodes}
