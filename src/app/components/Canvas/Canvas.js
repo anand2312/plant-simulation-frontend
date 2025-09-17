@@ -30,6 +30,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { entities } from "../../entities";
+import AIAnalysis from "../AIAnalysis/AIAnalysis";
 
 function CustomNode({ data, selected, onClick }) {
   const style = {
@@ -101,32 +102,65 @@ export default function Canvas() {
   const [edges, setEdges] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [formValues, setFormValues] = useState({});
+  const [simulationResults, setSimulationResults] = useState(null);
+  const [simulationTime, setSimulationTime] = useState(100);
+  const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   // --- Import/Export JSON ---
   const importInputRef = useRef(null);
 
   // Export current flow as JSON in { components: [...] } format
   const exportJson =async () => {
     // For each node, add outputs: array of target node ids for which this node is the source
-    const components = [
-      ...nodes.map(node => {
-        const outgoing = edges
-          .filter(edge => edge.source === node.id)
-          .map(edge => edge.target);
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            outputs: outgoing,
-          },
-          type: node.type,
-        };
-      }),
-      ...edges.map(edge => ({ type: 'edge', ...edge })),
-    ];
+    const capitalizeFirst = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+    const components = nodes.map(node => {
+      const component = {
+        name: node.id,
+        type: capitalizeFirst(node.type)
+      };
+      const params = {};
+      const entityType = capitalizeFirst(node.type);
+      const entity = entities[entityType];
+
+      if (entity?.properties) {
+        entity.properties.forEach(prop => {
+          const value = node.data[prop.name];
+          if (value !== undefined && value !== null & value !== '') {
+            if (prop.type === 'number') {
+              const numValue = parseFloat(value);
+              if (!isNaN(numValue)) {
+                params[prop.name] = numValue;
+              }
+            } else if (prop.type === 'checkbox') {
+              params[prop.name] = Boolean(value);
+            } else {
+              params[prop.name] = value;
+            }
+          }
+        });
+      }
+      
+      if (Object.keys(params).length > 0) {
+        component.params = params;
+      }
+
+      const outputs = edges
+        .filter(edge => edge.source === node.id)
+        .map(edge => edge.target);
+      
+      if (outputs.length === 1) {
+        component.outputs = outputs[0];
+      } else if (outputs.length > 1) {
+        component.outputs = outputs;
+      }
+
+      return component;
+    });
     const flow = { components };
+
     try {
       // Send the flow data to the FastAPI endpoint
-      const response = await fetch('http://127.0.0.1:8000/submit-flow', {
+      // string manipulation for passing query params :) im too tired for this
+      const response = await fetch(`http://127.0.0.1:8000/run?until=${simulationTime}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -153,6 +187,87 @@ export default function Canvas() {
     }
     console.log(JSON.stringify(flow, null, 2));
     alert("Flow JSON has been logged to the console.");
+  };
+
+  // Run simulation using the /run API endpoint
+  const runSimulation = async () => {
+    if (nodes.length === 0) {
+      alert("Please add some components to the canvas first!");
+      return;
+    }
+
+    const capitalizeFirst = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+    const components = nodes.map(node => {
+      const component = {
+        name: node.id,
+        type: capitalizeFirst(node.type)
+      };
+
+      const params = {};
+      const entityType = capitalizeFirst(node.type);
+      const entity = entities[entityType];
+
+      if (entity?.properties) {
+        entity.properties.forEach(prop => {
+          const value = node.data[prop.name];
+          if (value !== undefined && value !== null && value !== '') {
+            if (prop.type === 'number') {
+              const numValue = parseFloat(value);
+              if (!isNaN(numValue)) {
+                params[prop.name] = numValue;
+              }
+            } else if (prop.type === 'checkbox') {
+              params[prop.name] = Boolean(value);
+            } else {
+              params[prop.name] = value;
+            }
+          }
+        });
+      }
+
+      if (Object.keys(params).length > 0) {
+        component.params = params;
+      }
+
+      const outputs = edges
+        .filter(edge => edge.source === node.id)
+        .map(edge => edge.target);
+
+      if (outputs.length === 1) {
+        component.outputs = outputs[0];
+      } else if (outputs.length > 1) {
+        component.outputs = outputs;
+      }
+
+      return component;
+    });
+
+    const plantConfig = { components };
+
+    try {
+      setSimulationResults(null); // Clear previous results
+
+      const response = await fetch(`http://127.0.0.1:8000/run?until=${simulationTime}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(plantConfig),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const results = await response.json();
+      setSimulationResults(results);
+      console.log('Simulation Results:', results);
+      alert('Simulation completed successfully! Check the results panel.');
+
+    } catch (error) {
+      console.error('Error running simulation:', error);
+      alert(`Failed to run simulation: ${error.message}`);
+    }
   };
 
   // Import flow from JSON file
@@ -333,23 +448,36 @@ export default function Canvas() {
       onDrop={onDrop}
       onDragOver={onDragOver}
     >
-      {/* Check Valid Edges and Import/Export Buttons (aligned top-right) */}
+      {/* Control Panel (top-right) */}
       <div style={{ position: "absolute", top: 10, right: 10, zIndex: 20, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-        {/* <button 
-          onClick={printValidEdges}
-          style={{
-            padding: "8px 16px",
-            backgroundColor: "#219ebc",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            marginBottom: 4
-          }}
-        >
-          Check Valid Edges
-        </button> */}
+        {/* Simulation Controls */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, backgroundColor: "white", padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }}>
+          <label htmlFor="simTime" style={{ fontSize: "12px", fontWeight: "bold" }}>Sim Time:</label>
+          <input
+            id="simTime"
+            type="number"
+            value={simulationTime}
+            onChange={(e) => setSimulationTime(parseInt(e.target.value) || 100)}
+            style={{ width: "60px", padding: "4px", border: "1px solid #ccc", borderRadius: "2px" }}
+          />
+          <button
+            onClick={runSimulation}
+            style={{
+              padding: "6px 12px",
+              backgroundColor: "#ef4444",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontWeight: "bold",
+              fontSize: "12px"
+            }}
+          >
+            🚀 Run Simulation
+          </button>
+        </div>
+
+        {/* Import/Export Buttons */}
         <div style={{ display: "flex", gap: 8 }}>
           <input
             type="file"
@@ -388,6 +516,131 @@ export default function Canvas() {
           </button>
         </div>
       </div>
+
+      {/* Simulation Results Panel */}
+      {simulationResults && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 20,
+            right: 20,
+            background: "white",
+            padding: 16,
+            border: "1px solid #ddd",
+            borderRadius: 8,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            zIndex: 100,
+            maxWidth: 400,
+            maxHeight: 300,
+            overflow: "auto",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "bold" }}>Simulation Results</h3>
+            <button
+              onClick={() => setSimulationResults(null)}
+              style={{
+                background: "none",
+                border: "none",
+                fontSize: "18px",
+                cursor: "pointer",
+                color: "#666"
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          <div style={{ fontSize: "12px" }}>
+            {Object.entries(simulationResults).map(([componentName, stats]) => (
+              <div key={componentName} style={{ marginBottom: 12, padding: 8, backgroundColor: "#f8f9fa", borderRadius: 4 }}>
+                <div style={{ fontWeight: "bold", marginBottom: 4 }}>{componentName}</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, fontSize: "11px" }}>
+                  <div>Received: {stats.parts_received}</div>
+                  <div>Sent: {stats.parts_sent}</div>
+                  <div>Throughput: {stats.throughput.toFixed(3)}/time</div>
+                  <div>Avg Latency: {stats.avg_latency.toFixed(2)}</div>
+                  <div>Max Latency: {stats.max_latency.toFixed(2)}</div>
+                  <div>Utilization: {stats.utilization_time.toFixed(2)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* AI Analysis Button */}
+          <div style={{ marginTop: "16px", textAlign: "center" }}>
+            <button
+              onClick={() => setShowAIAnalysis(true)}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#8b5cf6",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: "bold",
+                fontSize: "14px",
+                width: "100%",
+              }}
+            >
+              🤖 AI Analysis
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* AI Analysis Modal */}
+      {showAIAnalysis && simulationResults && (
+        <AIAnalysis
+          plantConfig={{ components: nodes.map(node => {
+            const capitalizeFirst = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+            const component = {
+              name: node.id,
+              type: capitalizeFirst(node.type)
+            };
+
+            const params = {};
+            const entityType = capitalizeFirst(node.type);
+            const entity = entities[entityType];
+
+            if (entity?.properties) {
+              entity.properties.forEach(prop => {
+                const value = node.data[prop.name];
+                if (value !== undefined && value !== null && value !== '') {
+                  if (prop.type === 'number') {
+                    const numValue = parseFloat(value);
+                    if (!isNaN(numValue)) {
+                      params[prop.name] = numValue;
+                    }
+                  } else if (prop.type === 'checkbox') {
+                    params[prop.name] = Boolean(value);
+                  } else {
+                    params[prop.name] = value;
+                  }
+                }
+              });
+            }
+
+            if (Object.keys(params).length > 0) {
+              component.params = params;
+            }
+
+            const outputs = edges
+              .filter(edge => edge.source === node.id)
+              .map(edge => edge.target);
+
+            if (outputs.length === 1) {
+              component.outputs = outputs[0];
+            } else if (outputs.length > 1) {
+              component.outputs = outputs;
+            }
+
+            return component;
+          })}}
+          simulationResults={simulationResults}
+          onClose={() => setShowAIAnalysis(false)}
+        />
+      )}
       {/* <button onClick={logNodes}>Log Nodes</button> */}
       <ReactFlowProvider>
         <ReactFlow
