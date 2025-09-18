@@ -256,7 +256,90 @@ export default function Canvas() {
     }
   };
 
-  // Import flow from JSON file
+  // Convert plant config format to React Flow nodes and edges
+  const convertPlantConfigToFlow = (plantConfig) => {
+    if (!plantConfig.components || !Array.isArray(plantConfig.components)) {
+      throw new Error("Invalid plant config: Must contain 'components' array.");
+    }
+
+    const nodes = [];
+    const edges = [];
+    const gridSpacing = 200;
+    let currentRow = 0;
+    let currentCol = 0;
+    const maxCols = 3;
+
+    plantConfig.components.forEach((component, index) => {
+      // Find matching entity definition
+      const entityKey = component.type;
+      const entity = entities[entityKey];
+
+      if (!entity) {
+        throw new Error(`Unknown component type: ${component.type}`);
+      }
+
+      // Calculate position in a grid layout
+      const position = {
+        x: currentCol * gridSpacing + 100,
+        y: currentRow * gridSpacing + 100
+      };
+
+      // Move to next position
+      currentCol++;
+      if (currentCol >= maxCols) {
+        currentCol = 0;
+        currentRow++;
+      }
+
+      // Create node data with component parameters
+      const nodeData = {
+        label: entity.label,
+        color: entity.color,
+        onDelete: () => setNodes((nds) => nds.filter((node) => node.id !== component.name))
+      };
+
+      // Add component parameters to node data
+      if (component.params) {
+        Object.keys(component.params).forEach(paramKey => {
+          nodeData[paramKey] = component.params[paramKey];
+        });
+      }
+
+      // Initialize empty values for properties not in params
+      if (entity.properties) {
+        entity.properties.forEach(prop => {
+          if (!(prop.name in nodeData)) {
+            nodeData[prop.name] = "";
+          }
+        });
+      }
+
+      const node = {
+        id: component.name,
+        type: entity.type,
+        position,
+        data: nodeData
+      };
+
+      nodes.push(node);
+
+      // Create edges from outputs
+      if (component.outputs) {
+        const outputs = Array.isArray(component.outputs) ? component.outputs : [component.outputs];
+        outputs.forEach(targetName => {
+          edges.push({
+            id: `${component.name}-${targetName}`,
+            source: component.name,
+            target: targetName
+          });
+        });
+      }
+    });
+
+    return { nodes, edges };
+  };
+
+  // Import flow from JSON file (supports both React Flow format and plant config format)
   const importJson = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -264,14 +347,23 @@ export default function Canvas() {
     reader.onload = (e) => {
       try {
         const json = JSON.parse(e.target.result);
+
+        // Check if it's React Flow format (has nodes and edges)
         if (json.nodes && json.edges) {
           setNodes(json.nodes);
           setEdges(json.edges);
-        } else {
-          alert("Invalid JSON: Must contain 'nodes' and 'edges'.");
+        }
+        // Check if it's plant config format (has components)
+        else if (json.components) {
+          const { nodes, edges } = convertPlantConfigToFlow(json);
+          setNodes(nodes);
+          setEdges(edges);
+        }
+        else {
+          alert("Invalid JSON: Must contain either 'nodes' and 'edges' (React Flow format) or 'components' (plant config format).");
         }
       } catch (err) {
-        alert("Failed to parse JSON file.");
+        alert(`Failed to parse JSON file: ${err.message}`);
       }
     };
     reader.readAsText(file);
