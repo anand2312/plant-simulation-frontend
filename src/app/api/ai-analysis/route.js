@@ -82,7 +82,7 @@ Please provide a comprehensive analysis covering:
 
 ### 1. **Bottleneck Identification**
 - Ignore the source having a throughput of 0
-- Identify components with highest utilization or longest queues
+- Identify components with largest diff between parts recieved and parts sent
 - A common indicator of a node being a bottleneck is if it has received a large number of parts, but only sent a few.
 - Analyze part flow patterns and accumulation points
 
@@ -90,23 +90,25 @@ Please provide a comprehensive analysis covering:
 - Compare throughput across all components
 - Identify latency hotspots and their root causes
 - Evaluate utilization efficiency for each component
+- Keep a track of the node from which the current node recieved parts and see the diff between them to analyze bottlenecks
 
 ### 3. **Optimization Recommendations**
 Provide specific, actionable recommendations for:
 - **Capacity Adjustments**: Which components need more/less capacity
 - **Timing Optimization**: Processing times, intervals, travel times that should be adjusted
+-Make sure your recommendation don't conflict with plant layout
 
-For all your analysis, ignore the statistics of routers - they only exist to route parts to multiple nodes at once.
+
+
 
 ## Output Format:
-Please structure your response with clear headings, bullet points, and specific numeric recommendations where possible. Focus on actionable insights that can be directly implemented in the plant configuration.
+Please structure your response with clear headings, bullet points, and specific numeric recommendations where possible. Focus on actionable insights that can be directly implemented in the plant configuration.Keep your response concise and clear
 
 ## Component Types Reference:
 - **Source**: Generates parts (params: interval, limit, start_immediately)
 - **Station**: Processes parts (params: processing_time, capacity)
 - **Conveyor**: Transports parts (params: travel_time, capacity)
-- **Router**: Routes parts to multiple outputs (params: routing_logic)
-- **Drain**: Consumes parts (no params)
+- **Drain**: Consumes parts (capacity,drain_time)
 
 Provide your analysis:
 `;
