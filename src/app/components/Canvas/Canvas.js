@@ -111,7 +111,7 @@ export default function Canvas() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [formValues, setFormValues] = useState({});
   const [simulationResults, setSimulationResults] = useState(null);
-  const [simulationTime, setSimulationTime] = useState(100);
+  const [simulationTime, setSimulationTime] = useState(0);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   // --- Import/Export JSON ---
   const importInputRef = useRef(null);
@@ -543,7 +543,7 @@ export default function Canvas() {
             id="simTime"
             type="number"
             value={simulationTime}
-            onChange={(e) => setSimulationTime(parseInt(e.target.value) || 100)}
+            onChange={(e) => setSimulationTime(parseInt(e.target.value))}
             style={{ width: "60px", padding: "4px", border: "1px solid #ccc", borderRadius: "2px" }}
           />
           <button
