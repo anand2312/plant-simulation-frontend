@@ -31,6 +31,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { entities } from "../../entities";
 import AIAnalysis from "../AIAnalysis/AIAnalysis";
+import { useRouter } from "next/navigation";
 
 function CustomNode({ data, selected, onClick }) {
   const style = {
@@ -96,6 +97,7 @@ const nodeTypes = {
 * @returns {JSX.Element}
 */
 export default function Canvas() {
+  const router = useRouter();
   const reactFlowWrapper = useRef(null);
 
   const [nodes, setNodes] = useState([]);
@@ -261,9 +263,11 @@ export default function Canvas() {
 
       const results = await response.json();
       setSimulationResults(results);
-      console.log('Simulation Results:', results);
-      alert('Simulation completed successfully! Check the results panel.');
-
+      if (typeof window !== "undefined") {
+        localStorage.setItem("simulationResults", JSON.stringify(results));
+      }
+      router.push("/statistics");
+      
     } catch (error) {
       console.error('Error running simulation:', error);
       alert(`Failed to run simulation: ${error.message}`);
