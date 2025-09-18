@@ -100,8 +100,7 @@ export default function StatisticsPage() {
           </div>
       <div className="flex justify-center mt-10">
         <button
-          className="px-6 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600 transition"
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/canvas")}
         >
           Back to Canvas
         </button>
