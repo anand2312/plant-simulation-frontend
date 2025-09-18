@@ -112,13 +112,18 @@ export default function Canvas() {
 
   // Export current flow as JSON in { components: [...] } format
   const exportJson =async () => {
-    // For each node, add outputs: array of target node ids for which this node is the source
+    if (nodes.length === 0) {
+      alert("Please add some components to the canvas first!");
+      return;
+    }
+
     const capitalizeFirst = (str) => str.charAt(0).toUpperCase() + str.slice(1);
     const components = nodes.map(node => {
       const component = {
         name: node.id,
         type: capitalizeFirst(node.type)
       };
+
       const params = {};
       const entityType = capitalizeFirst(node.type);
       const entity = entities[entityType];
@@ -126,7 +131,7 @@ export default function Canvas() {
       if (entity?.properties) {
         entity.properties.forEach(prop => {
           const value = node.data[prop.name];
-          if (value !== undefined && value !== null & value !== '') {
+          if (value !== undefined && value !== null && value !== '') {
             if (prop.type === 'number') {
               const numValue = parseFloat(value);
               if (!isNaN(numValue)) {
@@ -140,7 +145,7 @@ export default function Canvas() {
           }
         });
       }
-      
+
       if (Object.keys(params).length > 0) {
         component.params = params;
       }
@@ -148,7 +153,7 @@ export default function Canvas() {
       const outputs = edges
         .filter(edge => edge.source === node.id)
         .map(edge => edge.target);
-      
+
       if (outputs.length === 1) {
         component.outputs = outputs[0];
       } else if (outputs.length > 1) {
@@ -157,38 +162,19 @@ export default function Canvas() {
 
       return component;
     });
-    const flow = { components };
 
-    try {
-      // Send the flow data to the FastAPI endpoint
-      // string manipulation for passing query params :) im too tired for this
-      const response = await fetch(`http://127.0.0.1:8000/run?until=${simulationTime}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(flow),
-        
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      else{
-        console.log("SUCCESS")
-      }
-      const data = await response.json();
-      console.log('Server response:', data);
-      alert('Flow successfully sent to the server!');
-      
-      // Optional: Still log the flow to console for debugging
-      console.log('Flow JSON:', JSON.stringify(flow, null, 2));
-    } catch (error) {
-      console.error('Error sending flow to server:', error);
-      alert(`Failed to send flow to server: ${error.message}`);
-    }
-    console.log(JSON.stringify(flow, null, 2));
-    alert("Flow JSON has been logged to the console.");
+    const plantConfig = { components };
+    const exportData=JSON.stringify(plantConfig);
+    const blob = new Blob([exportData], { type:"application/json" });                                                       
+    const url = URL.createObjectURL(blob);                                   
+    const a = document.createElement("a");                                   
+    a.href = url;                                                            
+    a.download = "simulation.json";                                          
+    document.body.appendChild(a);                                            
+    a.click();                                                               
+    document.body.removeChild(a);                                            
+    URL.revokeObjectURL(url);
+
   };
 
   // Run simulation using the /run API endpoint
