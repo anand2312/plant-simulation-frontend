@@ -18,7 +18,7 @@ export default function LandingPage() {
         transition={{ duration: 0.6 }}
       >
         <h1 className="text-6xl font-extrabold text-red-800 leading-tight mb-6">
-          Welcome to <span className="text-red-600">Plant Simulation</span>
+          Welcome to <span className="text-red-600">Factory Simulation</span>
         </h1>
         <p className="text-xl text-gray-600 mb-4">
           Design your plant layout with an intuitive{" "}
