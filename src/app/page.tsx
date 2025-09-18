@@ -9,7 +9,7 @@ export default function LandingPage() {
   const router = useRouter();
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-green-50 to-white px-6">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-red-50 to-white px-6">
       {/* Hero Section */}
       <motion.div
         className="text-center max-w-2xl"
@@ -17,14 +17,14 @@ export default function LandingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1 className="text-5xl font-extrabold text-green-800 leading-tight mb-6">
-          Welcome to <span className="text-green-600">Plant Simulation</span>
+        <h1 className="text-6xl font-extrabold text-red-800 leading-tight mb-6">
+          Welcome to <span className="text-red-600">Plant Simulation</span>
         </h1>
-        <p className="text-lg text-gray-600 mb-4">
+        <p className="text-xl text-gray-600 mb-4">
           Design your plant layout with an intuitive{" "}
           <span className="font-semibold">drag-and-drop interface</span>.
         </p>
-        <p className="text-lg text-gray-600 mb-8">
+        <p className="text-xl text-gray-600 mb-8">
           Run simulations, analyze results, and get{" "}
           <span className="font-semibold">AI-powered insights</span> to optimize
           efficiency.
@@ -32,7 +32,7 @@ export default function LandingPage() {
 
         <Button
           size="lg"
-          className="rounded-2xl shadow-lg bg-green-600 hover:bg-green-700 transition-all flex items-center gap-2"
+          className="rounded-2xl shadow-lg bg-red-600 hover:bg-red-700 transition-all flex items-center gap-2 mx-auto text-xl"
           onClick={() => router.push("/canvas")}
         >
           Go to Canvas <ArrowRight className="w-5 h-5" />
@@ -69,7 +69,7 @@ export default function LandingPage() {
             className="p-6 rounded-2xl shadow-md border bg-white hover:shadow-xl transition cursor-pointer"
           >
             <div className="text-4xl mb-3">{feature.icon}</div>
-            <h3 className="text-xl font-semibold mb-2 text-green-700">
+            <h3 className="text-xl font-semibold mb-2 text-red-700">
               {feature.title}
             </h3>
             <p className="text-gray-600">{feature.desc}</p>
