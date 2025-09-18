@@ -33,6 +33,20 @@ import { entities } from "../../entities";
 import AIAnalysis from "../AIAnalysis/AIAnalysis";
 import { useRouter } from "next/navigation";
 
+let counters = {
+  source: 0,
+  station: 0,
+  conveyor: 0,
+  drain: 0
+};
+
+const nodeTypes = {
+  source: (props) => <CustomNode {...props} />,
+  station: (props) => <CustomNode {...props} />,
+  conveyor: (props) => <CustomNode {...props} />,
+  drain: (props) => <CustomNode {...props} />
+  
+};
 function CustomNode({ data, selected, onClick }) {
   const style = {
     padding: 12,
@@ -65,7 +79,7 @@ function CustomNode({ data, selected, onClick }) {
   return (
     <div style={style} onClick={onClick}>
       <Handle type="target" position="top" />
-      <div>{data.label}</div>
+      <div>{data.id}</div>
       <button
         type="button"
         aria-label="Delete node"
@@ -82,14 +96,6 @@ function CustomNode({ data, selected, onClick }) {
     </div>
   );
 }
-
-const nodeTypes = {
-  source: (props) => <CustomNode {...props} />,
-  station: (props) => <CustomNode {...props} />,
-  conveyor: (props) => <CustomNode {...props} />,
-  drain: (props) => <CustomNode {...props} />
-  
-};
 
 /**
 * Main Canvas component for the plant simulation frontend.
@@ -457,8 +463,7 @@ export default function Canvas() {
         x: event.clientX - reactFlowBounds.left,
         y: event.clientY - reactFlowBounds.top,
       };
-
-      const id = `${type}_${+new Date()}`;
+      const id = `${type}_${counters[type.toLowerCase()]++}`;
       const baseEntity = entities[type];
 
       const newNode = {
@@ -466,6 +471,7 @@ export default function Canvas() {
         type: baseEntity.type,
         position,
         data: {
+          id: id,
           label: baseEntity.label,
           color: baseEntity.color,
           // Initialize all properties to empty
