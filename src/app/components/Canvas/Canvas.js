@@ -221,17 +221,13 @@ export default function Canvas() {
         .filter(edge => edge.source === node.id)
         .map(edge => edge.target);
 
-      if (outputs.length === 1) {
-        component.outputs = outputs[0];
-      } else if (outputs.length > 1) {
-        component.outputs = outputs;
-      }
-
+      component.outputs = outputs;
+  
       return component;
     });
 
     const plantConfig = { components };
-
+    console.log(plantConfig);
     try {
       setSimulationResults(null); // Clear previous results
 

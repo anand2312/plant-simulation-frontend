@@ -10,6 +10,15 @@ export const entities = {
       { name: "interval", label: "Interval", type: "number" },
       { name: "limit", label: "Limit", type: "number" },
       { name: "start_immediately", label: "Start Immediately", type: "checkbox" },
+      {
+        name: "routing_strategy",
+        label: "Routing Strategy",
+        type: "dropdown",
+        options: [
+          { value: "round_robin", label: "Round Robin" },
+          { value: "random", label: "Random" }
+        ]
+      },
     ],
   },
   Station: {
@@ -19,6 +28,15 @@ export const entities = {
     properties: [
       { name: "processing_time", label: "Processing Time", type: "number" },
       { name: "capacity", label: "Capacity", type: "number" },
+      {
+        name: "routing_strategy",
+        label: "Routing Strategy",
+        type: "dropdown",
+        options: [
+          { value: "round_robin", label: "Round Robin" },
+          { value: "random", label: "Random" }
+        ]
+      },
     ],
   },
   Conveyor: {
@@ -28,6 +46,15 @@ export const entities = {
     properties: [
       { name: "travel_time", label: "Travel Time", type: "number" },
       { name: "capacity", label: "Capacity", type: "number" },
+      {
+        name: "routing_strategy",
+        label: "Routing Strategy",
+        type: "dropdown",
+        options: [
+          { value: "round_robin", label: "Round Robin" },
+          { value: "random", label: "Random" }
+        ]
+      },
     ],
   },
   Router: {
@@ -50,6 +77,9 @@ export const entities = {
     type: "drain",
     label: "Drain",
     color: "#F44336",
-    properties: [],
+    properties: [
+      { name: "capacity", label: "Capacity", type: "number" },
+      { name: "drain_time", label: "Drain Time", type: "number" },
+    ],
   },
 };
