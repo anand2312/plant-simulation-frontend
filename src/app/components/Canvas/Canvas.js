@@ -277,6 +277,7 @@ export default function Canvas() {
 
     plantConfig.components.forEach((component, index) => {
       // Find matching entity definition
+      console.log(component);
       const entityKey = component.type;
       const entity = entities[entityKey];
 
@@ -297,8 +298,8 @@ export default function Canvas() {
         currentRow++;
       }
 
-      // Create node data with component parameters
       const nodeData = {
+        id: component.name,
         label: entity.label,
         color: entity.color,
         onDelete: () => setNodes((nds) => nds.filter((node) => node.id !== component.name))
@@ -502,6 +503,7 @@ export default function Canvas() {
           ? {
               ...node,
               data: {
+                id: node.id,
                 ...node.data,
                 ...formValues,
               },
