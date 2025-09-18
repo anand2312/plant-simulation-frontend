@@ -87,8 +87,8 @@ const nodeTypes = {
   source: (props) => <CustomNode {...props} />,
   station: (props) => <CustomNode {...props} />,
   conveyor: (props) => <CustomNode {...props} />,
-  drain: (props) => <CustomNode {...props} />,
-  router: (props) => <CustomNode {...props} />,
+  drain: (props) => <CustomNode {...props} />
+  
 };
 
 /**

@@ -57,22 +57,6 @@ export const entities = {
       },
     ],
   },
-  Router: {
-    type: "router",
-    label: "Router",
-    color: "#9C27B0",
-    properties: [
-      {
-        name: "routing_logic",
-        label: "Routing Logic",
-        type: "dropdown",
-        options: [
-          { value: "round_robin", label: "Round Robin" },
-          { value: "random", label: "Random" }
-        ]
-      }
-    ],
-  },
   Drain: {
     type: "drain",
     label: "Drain",
